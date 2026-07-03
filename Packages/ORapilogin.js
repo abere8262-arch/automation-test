@@ -27,7 +27,5 @@ export async function getnewtoken(request) {
 
     }
     return token;
-
-
-    
+  
 }
