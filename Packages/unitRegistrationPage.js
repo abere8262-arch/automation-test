@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { asyncWrapProviders } from "node:async_hooks";
+
 
 export class unitRegPage {
     constructor(page) {
@@ -39,11 +39,10 @@ export class unitRegPage {
         this.unitSaveBTN = page.locator('div.ant-card-body').locator('button:has(i[nztype="save"])').first();
         this.selectParentUnitBTN = page.locator('nz-form-item').filter({ hasText: 'Parent Unit' }).locator('nz-form-control').getByRole('button', { name: 'Select', exact: true });
 
-        this.clickParentUnit = (parentUnit) => this.page.locator('div.ant-modal-content').filter({ hasText: 'Unit Selection' }).locator('.ant-modal-body').filter({ hasText: parentUnit }).locator('input[type="radio"]');
-        this.personalSerchBTN = this.page.locator('.ant-modal-body').locator('input[placeholder="Search here"]');
+        this.clickParentUnit = (parentUnit) => this.page.locator('div.ant-modal-content').filter({ hasText: 'Unit Selection' }).locator('.ant-modal-body').locator('nz-tree-node').filter({ hasText: parentUnit }).locator('input[type="radio"]').first(); this.personalSerchBTN = this.page.locator('.ant-modal-body').locator('input[placeholder="Search here"]').first();
 
         // Tree Component Dynamic Selectors
-        this.getUnitTreeTextLabel = (unitName) => this.page.locator('.ant-modal-body .ant-tree-node-content-wrapper').filter({ hasText: unitName }).first();
+        this.getUnitTreeTextLabel = (unitName) => this.page.locator('.ant-tree-treenode').filter({ hasText: unitName }).locator('nz-tree-node-switcher');
         this.getUnitTreeRowNode = (unitName) => this.page.locator('.ant-modal-body .ant-tree-treenode').filter({ hasText: unitName }).first();
         this.modalDoneBTN = page.locator('div.ant-modal-footer').getByRole('button', { name: 'Done' }).first();
 
@@ -99,7 +98,7 @@ export class unitRegPage {
 
     async selectDropdownOption(optionText) {
 
-    
+
 
         await this.UnitTypeDropdownContainer.waitFor({ state: 'visible' });
         await this.UnitTypeDropdownContainer.click();
@@ -112,15 +111,15 @@ export class unitRegPage {
         await targetOption.click();
     }
 
-    async selectOrganizationUnits(unit) {
-         const plusSwitcher = this.page.locator('nz-tree-node-switcher').filter({has:this.page.locator('svg[data-icon="plus-square"]')});
-        await plusSwitcher.click();
+    async selectOrganizationUnits(unittry, unit) {
+
         await this.selectParentUnitBTN.waitFor({ state: 'visible' });
         await this.selectParentUnitBTN.click();
-        await this.clickParentUnit(unit).waitFor({ state: 'visible' });
+        await this.getUnitTreeTextLabel(unittry).click();
+        // await this.clickParentUnit(unit).waitFor({ state: 'visible' });
         await this.clickParentUnit(unit).click();
-          const plusSwitcherBTN = this.page.locator('nz-tree-node-switcher').filter({has:this.page.locator('svg[data-icon="plus-square"]')});
-        await plusSwitcherBTN.click();
+        //   const plusSwitcherBTN = this.page.locator('nz-tree-node-switcher').filter({has:this.page.locator('svg[data-icon="plus-square"]')});
+        // await plusSwitcherBTN.click();
     }
 
     async seveParentUnit() {
@@ -135,7 +134,7 @@ export class unitRegPage {
     }
 
     async clickSaveBTN() {
-        await this.unit.scrollIntoViewIfNeeded();
+        await this.unitSaveBTN.scrollIntoViewIfNeeded();
         await this.unitSaveBTN.click();
     }
 
@@ -145,24 +144,42 @@ export class unitRegPage {
 
     }
 
-    async clickDeleteBTN() {
+    async clickDeleteBTN(reasonText) {
+        // this.page.on('dialog',async dialog=>{
+        //   console.log(dialog.message());
+        //   await dialog.accept('ok');
+        // } );
         await this.DeleteBTN.scrollIntoViewIfNeeded();
         await this.DeleteBTN.click();
-        const Contextarea = this.DeleteConformetionModal.locator('textarea[formcontrolname="remark"]')
 
-        const deleteconBTN = this.DeleteConformetionModal.getByText('button', { name: 'Yes' });
-        await Contextarea.fill('Unit no longer required');
-        await Contextarea.blur();
-        await deleteconBTN.waitFor({ state: 'visible' })
-        await deleteconBTN.click({ force: true });
-        await this.DeleteConformetionModal.waitFor({ state: 'hidden', timeout: 5000 });
+        const dialog = this.page.locator('.ant-modal-content');
+        const reason = dialog.locator('textarea');
+
+        const yesButton = dialog.getByRole('button', { name: 'Yes' });
+
+        const noButton = dialog.getByRole('button', { name: 'No' });
+
+       
+
+        await yesButton.click();
+    //    const deleteResponse =this.page.waitForResponse(response =>
+    //         response.url().includes('/unit/delete') &&
+    //         response.request().method() === 'PUT' &&
+    //         response.status() === 200
+    //     );
+       // await deleteResponse;
+        await expect(this.page.getByText('Unit successfully moved to archive')).toBeVisible();
+        await expect(dialog).toBeHidden();
+        
     }
 
-    async PersonnelAssignmentToUnit(personalName) {
+
+
+    async PersonnelAssignmentToUnit(personalNameList) {
         await this.PersonnelAssignment.locator('button', { name: 'Expand' }).first().click(); // FIXED: Target semantic 'Expand' text label
         await this.PersonnelAssignment.getByRole('button', { name: 'Assign' }).first().click();
 
-        for (const name of personalName) {
+        for (const name of personalNameList) {
             await this.personalSerchBTN.click();
             await this.personalSerchBTN.fill(name);
             await this.page.keyboard.press('Enter');
@@ -174,23 +191,26 @@ export class unitRegPage {
             if (!(await personalcheckbox.isChecked())) { // FIXED: Pascal case method validation capitalization
                 await personalcheckbox.click();
             }
+            await this.personalSerchBTN.clear();
         }
         const addpersonaleBTN = this.modalPersonal.getByRole('button', { name: 'Done' });
         await addpersonaleBTN.scrollIntoViewIfNeeded();
         await addpersonaleBTN.click();
     }
-    async removePersonnelByName(firstName) {
+    async removePersonnelByName(firstNameList) {
+        for (const firstName of firstNameList) {
 
-        const section = this.page.locator('nz-card').filter({ hasText: 'Personnel Assignment' });
+            const section = this.page.locator('nz-card').filter({ hasText: 'Personnel Assignment' });
 
-        const personnelSearchInput = section.getByPlaceholder('Search here');
-        await personnelSearchInput.fill(firstName)
-        const targetRow = section.getByRole('row').filter({ hasText: `${firstName}` });
+            const personnelSearchInput = section.getByPlaceholder('Search here');
+            await personnelSearchInput.fill(firstName)
+            const targetRow = section.getByRole('row').filter({ hasText: `${firstName}` });
 
 
-        await targetRow.locator('button:has(i[nztype="close"])').first().click();
-        await this.confirmDeleteYesBTN.waitFor({ state: 'visible' });
-        await this.confirmDeleteYesBTN.click();
+            await targetRow.locator('button:has(i[nztype="close"])').first().click();
+            await this.confirmDeleteYesBTN.waitFor({ state: 'visible' });
+            await this.confirmDeleteYesBTN.click();
+        }
     }
     async selectSupervisorByName(supervisorName) {
         await this.SupervisorAssignment.locator('button', { name: 'Expand' }).first().click(); // FIXED: Target semantic 'Expand' text label
@@ -206,6 +226,7 @@ export class unitRegPage {
             if (!(await targetCheckbox.isChecked())) { // FIXED: Capitalization case rule tracking match
                 await targetCheckbox.click();
             }
+            await this.modalSupervisorSearchInput.clear();
         }
         await this.supervisordoneBTN.scrollIntoViewIfNeeded()
         await this.supervisordoneBTN.click(); // FIXED: Variable mapped context matching initialization rule assignment

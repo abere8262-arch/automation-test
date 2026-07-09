@@ -10,7 +10,7 @@ export class LoginPage {
     this.loginButton = page.getByRole('button', { name: 'Log in' });
     
     // Explicitly targeting the element as a button/clickable role if possible
-    this.organization = page.getByText('Perago Information Systems Test');
+   this.organization = page.getByText(/^Golden Authority$/);
     this.errorMessage = page.locator('.ant-alert-description');
     this.evaluationBTN = page.getByRole('link', { name: 'Evaluation', exact: true });
   }
