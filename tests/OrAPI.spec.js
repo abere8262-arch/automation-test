@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { getnewtoken } from '../packages/ORapilogin';
+import { Getnewtoken } from '../packages/ORapilogin';
 import { request } from 'node:http';
 
 let token;
 
 test.beforeEach(async ({ request }) => {
 
-  token = await getnewtoken(request);
+  token = await Getnewtoken(request);
 
 });
 

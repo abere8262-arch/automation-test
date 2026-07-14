@@ -1,6 +1,6 @@
-import { error } from "node:console";
 
-export async function getnewtoken(request) {
+
+export async function Getnewtoken(request) {
 
     const loginResponse = await request.post(
     'http://213.55.73.249/auth/connect/token',
