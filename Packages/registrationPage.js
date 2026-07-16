@@ -47,6 +47,8 @@ export class PersonnelPage {
         this.getUnitCheckbox = (unitName) => this.page.locator('.ant-modal-body tbody tr')
             .filter({ hasText: new RegExp(`^\\s*${unitName}\\s*$`, 'i') })
             .locator('input[type="checkbox"], .ant-checkbox-input').first();
+            this.UnitAssignmentSearchBTN=page.locator('div.ant-modal-body').locator('input[placeholder="Search here"]');
+           
 
         // Modal Action Confirmation Buttons
         this.modalAssignBTN = page.locator('.ant-modal, div').getByRole('button', { name: 'Assign' }).first();
@@ -150,9 +152,12 @@ export class PersonnelPage {
 
     async selectOrganizationUnits(unitsArray) {
         for (const unit of unitsArray) {
+            await this.UnitAssignmentSearchBTN.fill(unit);
+            await this.UnitAssignmentSearchBTN.click();
             const targetCheckbox = this.getUnitCheckbox(unit);
             await targetCheckbox.scrollIntoViewIfNeeded();
             await targetCheckbox.click();
+            await this.UnitAssignmentSearchBTN.clear();
 
             /*if (!(await targetCheckbox.isChecked())) {
                 await targetCheckbox.check();

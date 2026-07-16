@@ -18,12 +18,10 @@ test('purch initiation', async ({ page }) => {
    await loginPage.selectOrganizationUnit();
 
   const purchasingPage = new PurchasingPage(page);
-  
-
   await purchasingPage.clickInitiation();
 
   await purchasingPage.findAndClickRowByText(
-    'PIST11-NCB-G-0005-2018-PUR'
+    'PIST11-NCB-G-0062-2016-PUR'
   );
 
   await purchasingPage.clickSettingBtn();
